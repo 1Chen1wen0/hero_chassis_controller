@@ -1,0 +1,10 @@
+# Maximum commanded chassis speeds.
+linear_speed: 0.6          # m/s
+angular_speed: 1.2         # rad/s
+
+# Slew-rate limits used when starting, changing direction, and stopping.
+linear_acceleration: 1.5   # m/s^2
+angular_acceleration: 3.0  # rad/s^2
+
+publish_rate: 20.0         # Hz; must remain faster than the controller command timeout
+key_timeout: 0.6           # s; stop when movement-key repeats cease

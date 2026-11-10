@@ -1,0 +1,10 @@
+<launch>
+  <arg name="command_mode" default="" doc="Optional base/global override; empty uses controllers.yaml"/>
+
+  <rosparam file="$(find hero_chassis_controller)/config/controllers.yaml" command="load"/>
+  <param if="$(eval arg('command_mode') != '')"
+         name="controller/hero_chassis_controller/command_mode" value="$(arg command_mode)"/>
+
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen"
+        args="controller/hero_chassis_controller controller/joint_state_controller"/>
+</launch>

@@ -1,0 +1,18 @@
+<launch>
+  <arg name="paused" default="true"/>
+  <arg name="roller_type" default="realistic"/>
+  <arg name="command_mode" default="" doc="Optional base/global override; empty uses controllers.yaml"/>
+  <arg name="keyboard" default="false"/>
+
+  <include file="$(find rm_description_for_task)/launch/hero.launch">
+    <arg name="load_chassis" value="true"/>
+    <arg name="roller_type" value="$(arg roller_type)"/>
+    <arg name="paused" value="$(arg paused)"/>
+  </include>
+
+  <include file="$(find hero_chassis_controller)/launch/load_controller.launch">
+    <arg name="command_mode" value="$(arg command_mode)"/>
+  </include>
+
+  <include if="$(arg keyboard)" file="$(find hero_chassis_controller)/launch/keyboard_teleop.launch"/>
+</launch>

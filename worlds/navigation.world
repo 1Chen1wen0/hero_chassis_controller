@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="navigation_arena">
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <model name="arena_obstacles">
+      <static>true</static>
+      <link name="obstacles">
+        <collision name="north_wall_collision">
+          <pose>0 6 0.5 0 0 0</pose>
+          <geometry><box><size>12.4 0.2 1.0</size></box></geometry>
+        </collision>
+        <visual name="north_wall_visual">
+          <pose>0 6 0.5 0 0 0</pose>
+          <geometry><box><size>12.4 0.2 1.0</size></box></geometry>
+          <material><ambient>0.65 0.68 0.72 1</ambient><diffuse>0.65 0.68 0.72 1</diffuse></material>
+        </visual>
+
+        <collision name="south_wall_collision">
+          <pose>0 -6 0.5 0 0 0</pose>
+          <geometry><box><size>12.4 0.2 1.0</size></box></geometry>
+        </collision>
+        <visual name="south_wall_visual">
+          <pose>0 -6 0.5 0 0 0</pose>
+          <geometry><box><size>12.4 0.2 1.0</size></box></geometry>
+          <material><ambient>0.65 0.68 0.72 1</ambient><diffuse>0.65 0.68 0.72 1</diffuse></material>
+        </visual>
+
+        <collision name="east_wall_collision">
+          <pose>6 0 0.5 0 0 0</pose>
+          <geometry><box><size>0.2 12.0 1.0</size></box></geometry>
+        </collision>
+        <visual name="east_wall_visual">
+          <pose>6 0 0.5 0 0 0</pose>
+          <geometry><box><size>0.2 12.0 1.0</size></box></geometry>
+          <material><ambient>0.65 0.68 0.72 1</ambient><diffuse>0.65 0.68 0.72 1</diffuse></material>
+        </visual>
+
+        <collision name="west_wall_collision">
+          <pose>-6 0 0.5 0 0 0</pose>
+          <geometry><box><size>0.2 12.0 1.0</size></box></geometry>
+        </collision>
+        <visual name="west_wall_visual">
+          <pose>-6 0 0.5 0 0 0</pose>
+          <geometry><box><size>0.2 12.0 1.0</size></box></geometry>
+          <material><ambient>0.65 0.68 0.72 1</ambient><diffuse>0.65 0.68 0.72 1</diffuse></material>
+        </visual>
+
+        <collision name="east_block_collision">
+          <pose>2.2 1.0 0.5 0 0 0.25</pose>
+          <geometry><box><size>1.2 2.5 1.0</size></box></geometry>
+        </collision>
+        <visual name="east_block_visual">
+          <pose>2.2 1.0 0.5 0 0 0.25</pose>
+          <geometry><box><size>1.2 2.5 1.0</size></box></geometry>
+          <material><ambient>0.18 0.48 0.72 1</ambient><diffuse>0.18 0.48 0.72 1</diffuse></material>
+        </visual>
+
+        <collision name="west_block_collision">
+          <pose>-2.2 -1.6 0.5 0 0 -0.2</pose>
+          <geometry><box><size>1.6 1.6 1.0</size></box></geometry>
+        </collision>
+        <visual name="west_block_visual">
+          <pose>-2.2 -1.6 0.5 0 0 -0.2</pose>
+          <geometry><box><size>1.6 1.6 1.0</size></box></geometry>
+          <material><ambient>0.75 0.35 0.12 1</ambient><diffuse>0.75 0.35 0.12 1</diffuse></material>
+        </visual>
+
+        <collision name="north_block_collision">
+          <pose>-0.5 3.2 0.5 0 0 0</pose>
+          <geometry><box><size>3.0 0.6 1.0</size></box></geometry>
+        </collision>
+        <visual name="north_block_visual">
+          <pose>-0.5 3.2 0.5 0 0 0</pose>
+          <geometry><box><size>3.0 0.6 1.0</size></box></geometry>
+          <material><ambient>0.28 0.62 0.32 1</ambient><diffuse>0.28 0.62 0.32 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>

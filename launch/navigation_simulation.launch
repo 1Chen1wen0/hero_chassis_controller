@@ -1,0 +1,50 @@
+<launch>
+  <arg name="paused" default="false"/>
+  <arg name="gui" default="true"/>
+  <arg name="rviz" default="true"/>
+  <arg name="roller_type" default="simple"/>
+  <arg name="world_name" default="$(find hero_chassis_controller)/worlds/navigation.world"/>
+  <arg name="x_pos" default="0.0"/>
+  <arg name="y_pos" default="0.0"/>
+  <arg name="z_pos" default="0.5"/>
+  <arg name="yaw" default="0.0"/>
+
+  <include file="$(find rm_description_for_task)/launch/hero.launch">
+    <arg name="load_chassis" value="true"/>
+    <arg name="load_lidar" value="true"/>
+    <arg name="roller_type" value="$(arg roller_type)"/>
+    <arg name="world_name" value="$(arg world_name)"/>
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="x_pos" value="$(arg x_pos)"/>
+    <arg name="y_pos" value="$(arg y_pos)"/>
+    <arg name="z_pos" value="$(arg z_pos)"/>
+    <arg name="yaw" value="$(arg yaw)"/>
+  </include>
+
+  <include file="$(find hero_chassis_controller)/launch/load_controller.launch">
+    <arg name="command_mode" value="base"/>
+  </include>
+
+  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="log">
+    <rosparam file="$(find hero_chassis_controller)/config/gmapping.yaml" command="load"/>
+    <remap from="scan" to="/scan"/>
+  </node>
+
+  <node pkg="move_base" type="move_base" name="move_base" output="screen" clear_params="true">
+    <rosparam file="$(find hero_chassis_controller)/config/move_base.yaml" command="load"/>
+    <rosparam file="$(find hero_chassis_controller)/config/dwa_local_planner.yaml" command="load"/>
+    <rosparam file="$(find hero_chassis_controller)/config/global_planner.yaml" command="load"/>
+    <rosparam file="$(find hero_chassis_controller)/config/costmap_common.yaml"
+              command="load" ns="global_costmap"/>
+    <rosparam file="$(find hero_chassis_controller)/config/costmap_common.yaml"
+              command="load" ns="local_costmap"/>
+    <rosparam file="$(find hero_chassis_controller)/config/global_costmap.yaml"
+              command="load" ns="global_costmap"/>
+    <rosparam file="$(find hero_chassis_controller)/config/local_costmap.yaml"
+              command="load" ns="local_costmap"/>
+  </node>
+
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="rviz" output="screen"
+        args="-d $(find hero_chassis_controller)/rviz/navigation.rviz"/>
+</launch>

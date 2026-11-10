@@ -1,0 +1,23 @@
+base_frame: base_link
+odom_frame: odom
+map_frame: map
+map_update_interval: 1.0
+transform_publish_period: 0.05
+tf_delay: 0.05
+
+throttle_scans: 1
+maxUrange: 7.5
+maxRange: 8.0
+minimumScore: 50
+
+linearUpdate: 0.10
+angularUpdate: 0.10
+temporalUpdate: 0.50
+particles: 30
+
+xmin: -15.0
+ymin: -15.0
+xmax: 15.0
+ymax: 15.0
+delta: 0.05
+occ_thresh: 0.25

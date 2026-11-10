@@ -1,0 +1,10 @@
+<launch>
+  <arg name="cmd_vel_topic" default="/cmd_vel"/>
+  <arg name="config" default="$(find hero_chassis_controller)/config/keyboard_teleop.yaml"/>
+
+  <node name="keyboard_teleop" pkg="hero_chassis_controller" type="keyboard_teleop"
+        output="screen" required="true">
+    <rosparam command="load" file="$(arg config)"/>
+    <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
+  </node>
+</launch>

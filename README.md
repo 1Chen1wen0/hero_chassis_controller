@@ -1,200 +1,156 @@
-# Package Name
+# hero_chassis_controller
 
-## Overview
+ROS Noetic `ros_control` controller for the four-wheel mecanum Hero chassis.
 
-This is a template: replace, remove, and add where required. Describe here what this package does and what it's meant
-for in a few sentences.
+## Implemented requirements
 
-**Keywords:** example, package, template
+- Four independent `control_toolbox::Pid` wheel-speed loops.
+- `/cmd_vel` inverse kinematics using configurable wheel radius, wheelbase, and track width.
+- Forward kinematics, integrated odometry on `/odom`, and `odom -> base_link` TF.
+- `base` and `global` command modes. Global commands are transformed from `global_frame` to `base_link` with TF.
+- Command timeout, proportional wheel-speed limiting, effort limiting, and realtime-safe command/publisher paths.
+- C++ mecanum keyboard teleoperation with configurable speed, acceleration limits, and automatic stopping.
 
-Or, add some keywords to the Bitbucket or GitHub repository.
+Wheel order is front-left, front-right, back-left, back-right. With `x` forward, `y` left, and positive yaw counterclockwise:
 
-### License
+```text
+w_fl = (vx - vy - (L + W) / 2 * wz) / r
+w_fr = (vx + vy + (L + W) / 2 * wz) / r
+w_bl = (vx + vy - (L + W) / 2 * wz) / r
+w_br = (vx - vy + (L + W) / 2 * wz) / r
+```
 
-The source code is released under a [BSD 3-Clause license](LICENSE).
+## Build
 
-**Author: Péter Fankhauser<br />
-Affiliation: [ANYbotics](https://www.anybotics.com/)<br />
-Maintainer: Péter Fankhauser, pfankhauser@anybotics.com**
+Run inside the ROS Noetic container:
 
-The PACKAGE NAME package has been tested under [ROS] Indigo, Melodic and Noetic on respectively Ubuntu 14.04, 18.04 and
-20.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
+```bash
+source /opt/ros/noetic/setup.bash
+cd /home/data/catkin_ws
+rosdep install --from-paths src --ignore-src -r -y
+catkin build hero_chassis_controller
+source devel/setup.bash
+```
 
-[![Build Status](http://rsl-ci.ethz.ch/buildStatus/icon?job=ros_best_practices)](http://rsl-ci.ethz.ch/job/ros_best_practices/)
+## Run
 
-![Example image](doc/example.jpg)
+When `command_mode` is omitted, the launch files use `controller/hero_chassis_controller/command_mode`
+from `config/controllers.yaml` (`base` or `global`). An explicit `command_mode:=base` or
+`command_mode:=global` overrides the YAML value. Restart the controller after changing the mode.
 
-[comment]: <> (### Publications)
+```bash
+roslaunch hero_chassis_controller run_simulation_and_controller.launch paused:=false
+```
 
-[comment]: <> (If you use this work in an academic context, please cite the following publication&#40;s&#41;:)
+Base-frame command mode:
 
-[comment]: <> (* P. Fankhauser, M. Bloesch, C. Gehring, M. Hutter, and R. Siegwart: **PAPER TITLE**. IEEE/RSJ International Conference)
+```bash
+roslaunch hero_chassis_controller run_simulation_and_controller.launch \
+  paused:=false command_mode:=base
+```
 
-[comment]: <> (  on Intelligent Robots and Systems &#40;IROS&#41;, 2015. &#40;[PDF]&#40;http://dx.doi.org/10.3929/ethz-a-010173654&#41;&#41;)
+Send test commands from another sourced container terminal:
 
-[comment]: <> (        @inproceedings{Fankhauser2015,)
+```bash
+rostopic pub -r 20 /cmd_vel geometry_msgs/Twist \
+  "{linear: {x: 0.5, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}"
+```
 
-[comment]: <> (            author = {Fankhauser, P\'{e}ter and Hutter, Marco},)
+Global-frame command mode interprets `linear.x` and `linear.y` in `global_frame` (default `odom`) and transforms them to `base_link`:
 
-[comment]: <> (            booktitle = {IEEE/RSJ International Conference on Intelligent Robots and Systems &#40;IROS&#41;},)
+```bash
+roslaunch hero_chassis_controller run_simulation_and_controller.launch \
+  paused:=false command_mode:=global
+```
 
-[comment]: <> (            title = {{PAPER TITLE}},)
+## Gazebo navigation
 
-[comment]: <> (            publisher = {IEEE},)
+The navigation simulation starts the dedicated obstacle arena, the Hero chassis controller, a 360-degree laser,
+GMapping, `move_base`, the holonomic DWA local planner, and RViz:
 
-[comment]: <> (            year = {2015})
+```bash
+source /opt/ros/noetic/setup.bash
+source /home/data/catkin_ws/devel/setup.bash
+roslaunch hero_chassis_controller navigation_simulation.launch
+```
 
-[comment]: <> (        })
+Wait until the map and laser points appear in RViz, then use **2D Nav Goal** to set a target. GMapping owns
+`map -> odom`, the chassis controller owns `odom -> base_link`, and `robot_state_publisher` owns
+`base_link -> laser_link`. The DWA configuration samples both `linear.x` and `linear.y` for mecanum motion.
 
-## Installation
+For a headless check:
 
-### Installation from Packages
+```bash
+roslaunch hero_chassis_controller navigation_simulation.launch gui:=false rviz:=false
+```
 
-To install all packages from the this repository as Debian packages use
+The launch defaults to `worlds/navigation.world`. Another Gazebo world can be selected with an absolute path:
 
-    sudo apt-get install ros-noetic-...
+```bash
+roslaunch hero_chassis_controller navigation_simulation.launch \
+  world_name:=/absolute/path/to/arena.world
+```
 
-Or better, use `rosdep`:
+The selected world must have collision geometry at the laser height. Do not run `keyboard_teleop` or
+`simple_navigator` with `move_base`; all three publish `/cmd_vel`.
 
-	sudo rosdep install --from-paths src
+## Keyboard control
 
-### Building from Source
+Start the simulation and controller in one interactive container terminal:
 
-#### Dependencies
-
-- [Robot Operating System (ROS)](http://wiki.ros.org) (middleware for robotics),
-- [Eigen] (linear algebra library)
-
-  sudo rosdep install --from-paths src
-
-#### Building
-
-To build from source, clone the latest version from this repository into your catkin workspace and compile the package
-using
-
-	cd catkin_workspace/src
-	git clone https://github.com/ethz-asl/ros_best_practices.git
-	cd ../
-	rosdep install --from-paths . --ignore-src
-	catkin_make
-
-### Running in Docker
-
-Docker is a great way to run an application with all dependencies and libraries bundles together. Make sure
-to [install Docker](https://docs.docker.com/get-docker/) first.
-
-First, spin up a simple container:
-
-	docker run -ti --rm --name ros-container ros:noetic bash
-
-This downloads the `ros:noetic` image from the Docker Hub, indicates that it requires an interactive terminal (`-t, -i`)
-, gives it a name (`--name`), removes it after you exit the container (`--rm`) and runs a command (`bash`).
-
-Now, create a catkin workspace, clone the package, build it, done!
-
-	apt-get update && apt-get install -y git
-	mkdir -p /ws/src && cd /ws/src
-	git clone https://github.com/leggedrobotics/ros_best_practices.git
-	cd ..
-	rosdep install --from-path src
-	catkin_make
-	source devel/setup.bash
-	roslaunch ros_package_template ros_package_template.launch
-
-### Unit Tests
-
-Run the unit tests with
-
-	catkin_make run_tests_ros_package_template
-
-### Static code analysis
-
-Run the static code analysis with
-
-	catkin_make roslint_ros_package_template
-
-## Usage
-
-Describe the quickest way to run this software, for example:
-
-Run the main node with
-
-	roslaunch ros_package_template ros_package_template.launch
-
-## Config files
-
-Config file folder/set 1
-
-* **config_file_1.yaml** Shortly explain the content of this config file
-
-Config file folder/set 2
-
-* **...**
-
-## Launch files
-
-* **launch_file_1.launch:** shortly explain what is launched (e.g standard simulation, simulation with gdb,...)
-
-  Argument set 1
-
-    - **`argument_1`** Short description (e.g. as commented in launch file). Default: `default_value`.
-
-  Argument set 2
-
-    - **`...`**
-
-* **...**
-
-## Nodes
-
-### ros_package_template
-
-Reads temperature measurements and computed the average.
-
-#### Subscribed Topics
-
-* **`/temperature`** ([sensor_msgs/Temperature])
-
-  The temperature measurements from which the average is computed.
-
-#### Published Topics
-
-...
-
-#### Services
-
-* **`get_average`** ([std_srvs/Trigger])
-
-  Returns information about the current average. For example, you can trigger the computation from the console with
-
-  	rosservice call /ros_package_template/get_average
-
-#### Parameters
-
-* **`subscriber_topic`** (string, default: "/temperature")
-
-  The name of the input topic.
-
-* **`cache_size`** (int, default: 200, min: 0, max: 1000)
-
-  The size of the cache.
-
-### NODE_B_NAME
-
-...
-
-## Bugs & Feature Requests
-
-Please report bugs and request features using the [Issue Tracker](https://github.com/gdut-dynamic-x/rm_template/issues)
-.
-
-
-[ROS]: http://www.ros.org
-
-[rviz]: http://wiki.ros.org/rviz
-
-[Eigen]: http://eigen.tuxfamily.org
-
-[std_srvs/Trigger]: http://docs.ros.org/api/std_srvs/html/srv/Trigger.html
-
-[sensor_msgs/Temperature]: http://docs.ros.org/api/sensor_msgs/html/msg/Temperature.html
+```bash
+roslaunch hero_chassis_controller run_simulation_and_controller.launch \
+  paused:=false command_mode:=base keyboard:=true
+```
+
+Alternatively, keep the simulation launch unchanged and start the keyboard node in a second sourced terminal:
+
+```bash
+roslaunch hero_chassis_controller keyboard_teleop.launch
+```
+
+The keyboard mapping is `W/S` for forward/backward, `A/D` for left/right strafing, `Q/E` for
+counterclockwise/clockwise rotation, `U/O/M/.` for diagonal motion, and `Space` (or `K`) for an
+immediate stop. Hold a movement key to drive; the node smoothly stops after the key is released.
+Run the command from an interactive terminal (`docker exec -it ...`) so the node can read keys.
+
+Keyboard speed, acceleration, publication rate, and release timeout are configured in
+`config/keyboard_teleop.yaml`. The node publishes `geometry_msgs/Twist` to `/cmd_vel`, so it uses
+the same controller interface as any autonomous command source. Do not run another `/cmd_vel`
+publisher at the same time.
+
+## Configuration
+
+Parameters and PID gains are in `config/controllers.yaml`. PID gains appear under:
+
+```text
+/controller/hero_chassis_controller/pid/front_left
+/controller/hero_chassis_controller/pid/front_right
+/controller/hero_chassis_controller/pid/back_left
+/controller/hero_chassis_controller/pid/back_right
+```
+
+Use `rqt_plot` to inspect the wheel velocities in `/joint_states` while tuning gains. Each
+`control_toolbox::Pid` initializes a dynamic-reconfigure server, so gains can be changed while the
+controller is running:
+
+```bash
+rosrun rqt_plot rqt_plot
+rosrun rqt_reconfigure rqt_reconfigure
+```
+
+Useful checks:
+
+```bash
+rostopic echo /odom
+rosrun tf tf_echo odom base_link
+rostopic echo /joint_states
+rosservice call /controller_manager/list_controllers
+```
+
+Run tests with:
+
+```bash
+catkin run_tests hero_chassis_controller
+catkin_test_results
+```

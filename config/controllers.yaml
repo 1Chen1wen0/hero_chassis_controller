@@ -1,0 +1,35 @@
+controller:
+  hero_chassis_controller:
+    type: hero_chassis_controller/HeroChassisController
+
+    joints:
+      - left_front_wheel_joint
+      - right_front_wheel_joint
+      - left_back_wheel_joint
+      - right_back_wheel_joint
+
+    wheel_radius: 0.07625
+    wheel_base: 0.4
+    wheel_track: 0.4
+
+    command_mode: base       # base: cmd_vel is in base_link; global: cmd_vel is in global_frame
+    base_frame: base_link
+    odom_frame: odom
+    global_frame: odom
+    command_timeout: 0.5
+    transform_timeout: 0.02
+
+    max_wheel_speed: 40.0
+    max_effort: 5.0
+    publish_rate: 50.0
+    publish_tf: true
+#在此处修改pid参数
+    pid:
+      front_left:  {p: 0.4, i: 0.05, d: 0.005, i_clamp: 2.0, antiwindup: true}
+      front_right: {p: 0.4, i: 0.05, d: 0.005, i_clamp: 2.0, antiwindup: true}
+      back_left:   {p: 0.4, i: 0.05, d: 0.005, i_clamp: 2.0, antiwindup: true}
+      back_right:  {p: 0.4, i: 0.05, d: 0.005, i_clamp: 2.0, antiwindup: true}
+
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50
